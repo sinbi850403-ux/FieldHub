@@ -115,6 +115,7 @@ model Job {
   priceModel      PriceModel?
   cancellationPolicy CancellationPolicy?
   disputeProtocol DisputeProtocol?
+  bookings       Booking[]
 
   @@unique([categoryId, jobId])
 }

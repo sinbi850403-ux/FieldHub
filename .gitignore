@@ -20,3 +20,9 @@ pnpm-debug.log*
 build/
 .tmp/
 .cache/
+
+node_modules/
+dist/
+.env
+.env.*
+!.env.example

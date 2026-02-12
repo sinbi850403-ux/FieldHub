@@ -1,0 +1,22 @@
+# OS / Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Expo / React Native
+.expo-shared/
+web-build/
+*.iml
+
+# Node
+npm-debug.log*
+pnpm-debug.log*
+.pnpm-store/
+.yarn/
+.yarnrc.yml
+
+# Build
+build/
+.tmp/
+.cache/

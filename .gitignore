@@ -17,3 +17,10 @@ yarn-error.log*
 # build output
 dist/
 coverage/
+
+**/node_modules/
+build/
+.expo-shared/
+web-build/
+.vscode/
+.idea/

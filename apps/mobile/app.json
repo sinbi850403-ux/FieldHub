@@ -1,0 +1,13 @@
+{
+  "expo": {
+    "name": "FieldHub",
+    "slug": "fieldhub",
+    "version": "0.2.0",
+    "sdkVersion": "51.0.0",
+    "platforms": [
+      "ios",
+      "android"
+    ],
+    "orientation": "portrait"
+  }
+}

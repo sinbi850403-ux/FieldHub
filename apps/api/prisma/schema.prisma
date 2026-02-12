@@ -1,0 +1,277 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  CUSTOMER
+  PROVIDER
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  BLOCKED
+}
+
+enum BookingStatus {
+  REQUESTED
+  ASSIGNED
+  IN_PROGRESS
+  COMPLETED_PROVIDER
+  SIGNED_OFF
+  SETTLED
+  CANCELLED
+  REFUNDED
+  DISPUTED
+}
+
+enum AssignmentStatus {
+  ACCEPTED
+  CANCELLED
+}
+
+enum EvidenceType {
+  PHOTO
+  VIDEO
+  DOC
+}
+
+enum PaymentStatus {
+  INIT
+  PAID
+  FAILED
+  CANCELLED
+  REFUNDED
+}
+
+enum DisputeStatus {
+  OPEN
+  RESOLVED_REWORK
+  RESOLVED_PARTIAL_REFUND
+  RESOLVED_FULL_REFUND
+  REJECTED
+  CLOSED
+}
+
+enum SettlementStatus {
+  PENDING
+  PAID_OUT
+  FAILED
+}
+
+model User {
+  id           String     @id @default(cuid())
+  role         UserRole
+  status       UserStatus @default(ACTIVE)
+  phone        String?    @unique
+  email        String?    @unique
+  name         String?
+  passwordHash String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  providerProfile ProviderProfile?
+  bookings        Booking[] @relation("customerBookings")
+  evidences       Evidence[]
+}
+
+model ProviderProfile {
+  userId          String  @id
+  tierAllowedMax  Int     @default(2)
+  isVerified      Boolean @default(false)
+  createdAt       DateTime @default(now())
+
+  user            User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Category {
+  id          String  @id @default(cuid())
+  categoryId  String  @unique
+  nameKo      String
+  description String?
+  tier        Int     @default(1)
+  isActive    Boolean @default(true)
+
+  jobs        Job[]
+  inputFields InputField[]
+  bookings    Booking[]
+}
+
+model Job {
+  id              String  @id @default(cuid())
+  jobId           String
+  name            String
+  baseDurationMin Int     @default(60)
+  isActive        Boolean @default(true)
+
+  categoryId      String
+  category        Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  priceModel      PriceModel?
+  cancellationPolicy CancellationPolicy?
+  disputeProtocol DisputeProtocol?
+
+  @@unique([categoryId, jobId])
+}
+
+model InputField {
+  id         String @id @default(cuid())
+  fieldKey   String
+  label      String
+  type       String
+  required   Boolean @default(false)
+  options    String[]
+
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([categoryId, fieldKey])
+}
+
+model PriceModel {
+  id            String @id @default(cuid())
+  type          String
+  minPriceKrw   Int?
+  maxPriceKrw   Int?
+  unitMinutes   Int?
+  minBillableUnits Int?
+  quoteSlaMin   Int?
+  milestones    Json?
+
+  jobId         String @unique
+  job           Job    @relation(fields: [jobId], references: [id], onDelete: Cascade)
+}
+
+model CancellationPolicy {
+  id                 String @id @default(cuid())
+  policyId           String
+  freeCancelBeforeMin Int
+  lateCancelFeeRate   Float
+  afterStartFeeRate   Float
+
+  jobId              String @unique
+  job                Job    @relation(fields: [jobId], references: [id], onDelete: Cascade)
+}
+
+model DisputeProtocol {
+  id               String @id @default(cuid())
+  protocolId       String
+  timeLimitHours   Int
+  evidenceRequired Boolean @default(true)
+  customerAckRequired Boolean @default(true)
+
+  jobId            String @unique
+  job              Job    @relation(fields: [jobId], references: [id], onDelete: Cascade)
+}
+
+model Booking {
+  id            String @id @default(cuid())
+  customerId    String
+  categoryId    String
+  jobId         String
+  status        BookingStatus @default(REQUESTED)
+  scheduledAt   DateTime
+  addressText   String?
+  lat           Float?
+  lng           Float?
+  priceQuoteTotal Int @default(0)
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  customer      User @relation("customerBookings", fields: [customerId], references: [id], onDelete: Cascade)
+  category      Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  job           Job @relation(fields: [jobId], references: [id], onDelete: Restrict)
+
+  inputs        BookingInput[]
+  assignments   BookingAssignment[]
+  evidences     Evidence[]
+  payment       Payment?
+  dispute       Dispute?
+  review        Review?
+}
+
+model BookingInput {
+  id        String @id @default(cuid())
+  bookingId String
+  fieldKey  String
+  valueText String?
+  valueJson Json?
+
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+}
+
+model BookingAssignment {
+  id         String @id @default(cuid())
+  bookingId  String
+  providerId String
+  status     AssignmentStatus @default(ACCEPTED)
+  createdAt  DateTime @default(now())
+
+  booking    Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+}
+
+model Evidence {
+  id             String @id @default(cuid())
+  bookingId      String
+  uploaderUserId String
+  type           EvidenceType @default(PHOTO)
+  url            String
+  meta           Json?
+  createdAt      DateTime @default(now())
+
+  booking        Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  uploader       User    @relation(fields: [uploaderUserId], references: [id], onDelete: Cascade)
+}
+
+model Payment {
+  id            String @id @default(cuid())
+  bookingId     String @unique
+  amountKrw     Int
+  providerPayoutAmountKrw Int?
+  status        PaymentStatus @default(INIT)
+  provider       String?
+  providerRef    String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  booking       Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+}
+
+model Dispute {
+  id          String @id @default(cuid())
+  bookingId   String @unique
+  status      DisputeStatus @default(OPEN)
+  reason      String?
+  evidenceIds String[]
+  resolution  Json?
+  createdAt   DateTime @default(now())
+  resolvedAt  DateTime?
+
+  booking     Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+}
+
+model Review {
+  id         String @id @default(cuid())
+  bookingId  String @unique
+  rating     Int
+  comment    String?
+  createdAt  DateTime @default(now())
+
+  booking    Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+}
+
+model Settlement {
+  id            String @id @default(cuid())
+  providerId    String
+  periodStart   DateTime
+  periodEnd     DateTime
+  totalPayoutKrw Int
+  status        SettlementStatus @default(PENDING)
+  createdAt     DateTime @default(now())
+}

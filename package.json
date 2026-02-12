@@ -1,0 +1,12 @@
+{
+  "name": "smart-workforce-monorepo",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:api": "npm --prefix apps/api run start:dev",
+    "dev:mobile": "npm --prefix apps/mobile run start"
+  }
+}

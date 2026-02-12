@@ -1,0 +1,13 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: sw
+      POSTGRES_PASSWORD: sw
+      POSTGRES_DB: smart_workforce
+    ports:
+      - "5432:5432"
+    volumes:
+      - sw_pg:/var/lib/postgresql/data
+volumes:
+  sw_pg:

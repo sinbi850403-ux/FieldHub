@@ -1,0 +1,30 @@
+# OS / Editor
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.vscode/
+.idea/
+
+# Expo shared
+.expo/
+.expo-shared/
+
+# pnpm / yarn caches
+.pnpm-store/
+.npm/
+.yarn/
+.yarn/cache/
+.yarn/unplugged/
+.yarn/build-state.yml
+.yarn/install-state.gz
+
+# Build / temp folders
+node_modules/
+**/node_modules/
+dist/
+build/
+coverage/
+.tmp/
+tmp/
+*.log
